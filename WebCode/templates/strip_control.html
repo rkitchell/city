@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block headextra %}
+  <title>Strip Control</title>
+{% endblock %}
+
+{% block content %}
+  <div class="row">
+    <div class="row" style="width: 100%;"> <!-- Start of motor row -->
+      <div class="col-md-1">
+	<b>Motor</b>
+      </div>
+      <div class="col-md-1">
+	<form action="submit" method="post" class="motor-form" id="form-motor">
+	  {% if response.motor.motor_on %}
+	    <input class="none" id="motor" type="checkbox" name="motor" checked="checked" onChange="submitFormMotor()">
+	  {% else %}
+	    <input class="none" id="motor" type="checkbox" name="motor" onChange="submitFormMotor()">
+	  {%endif %}
+	</form>
+      </div>
+      <div class="offset-md-10"></div>
+      <div class="col-md-3 col-lg-2">
+	<b>Traffic Light Power</b>
+      </div>
+      <div class="col-md-2 col-lg-1">
+	<form action="submit" method="post" class="traffic-light-form" id="form-traffic-light">
+	  {% if response.traffic_light.traffic_light_power %}
+	    <input class="none" id="traffic-light-switch" type="checkbox" name="traffic-light-switch" checked="checked" onChange="submitFormTrafficLight()">
+	  {% else %}
+	    <input class="none" id="traffic-light-switch" type="checkbox" name="traffic-light-switch" onChange="submitFormTrafficLight()">
+	  {%endif %}
+	<!--</form>-->
+      </div>
+      <div class="col-md-3 col-lg-2">
+	<b>Traffic Light Mode</b>
+      </div>
+      <div class="col-md-2 col-lg-1">
+	<!--<form action="submit" method="post" class="traffic-light-form" id="form-traffic-light">-->
+	  {% if response.traffic_light.traffic_light_mode %}
+	    <input class="none" id="traffic-light" type="checkbox" name="traffic-light" checked="checked" onChange="submitFormTrafficLight()">
+	  {% else %}
+	    <input class="none" id="traffic-light" type="checkbox" name="traffic-light" onChange="submitFormTrafficLight()">
+	  {%endif %}
+	</form>
+      </div>
+    </div>
+    <div class="offset-md-2 offset-lg-6"></div>
+    <div class="row" style="width: 100%; margin-top: 20px;">
+      {% for strip_id, strip_values in response.strips.items %}
+	<div class="col-md-2"> <!-- Start of strip col -->
+	  <p><b>Strip {{ strip_id }}</b></p>
+	  <hr>
+	  <form action="submit" method="post" class="strip-form" data-strip="{{ strip_id }}" id="form-strip-{{strip_id }}">
+	    {% csrf_token %}
+	    <div class="row"> <!-- Start of street light row -->
+	      <div class="col-md-12">
+		<b>Street Light</b>
+	      </div>
+	      <div class="col-md-12">
+		{% if strip_values.street_light.street_light_on %}
+		  <input class="none" id="street-light-{{ strip_id }}" type="checkbox" name="street-light" checked="checked" onChange="submitFormStrip({{ strip_id }})">
+		{% else %}
+		  <input class="none" id="street-light-{{ strip_id }}" type="checkbox" name="street-light" onChange="submitFormStrip({{ strip_id }})">
+		{%endif %}
+	      </div>
+	    </div>
+	  </form>
+	  {% for building_id, building_values in strip_values.buildings.items %}
+	    <hr>
+	    <p><b>Building {{ building_id }}:</b> {{building_values.building_type }}</p>
+	    <form action="submit" method="post" class="building-form" data-building="{{ building_id }}" data-strip="{{ strip_id }}" id="form-building-{{ strip_id }}-{{ building_id }}">
+	      {% csrf_token %}
+	      <div class="row"> <!-- Start of entry row -->
+		<div class="col-2 col-md-12 col-lg-5"> <!-- Start of input label col -->
+		  <label>Red</label>
+		</div> <!-- End of input label col -->
+		<div class="col-4 col-md-12 col-lg-7"> <!-- Start of input col -->
+		  <input type="text" class="form-control" value="{{ building_values.building_red }}" id="text-red-{{ strip_id }}">
+		</div> <!-- End of input row-->
+		<div class="offset-6"></div>
+	      </div> <!-- End of entry row -->
+	      <div class="row"> <!-- Start of entry row -->
+		<div class="col-2 col-md-12 col-lg-5"> <!-- Start of input label col -->
+		  <label>Green</label>
+		</div> <!-- End of input label col -->
+		<div class="col-4 col-md-12 col-lg-7"> <!-- Start of input col -->
+		  <input class="form-control" type="text" value="{{ building_values.building_green }}" id="text-green-{{ strip_id }}">
+		</div> <!-- End of input row-->
+		<div class="offset-6"></div>
+	      </div> <!-- End of entry row -->
+	      <div class="row"> <!-- Start of entry row -->
+		<div class="col-2 -col-md-12 col-lg-5"> <!-- Start of input label col -->
+		  <label>Blue</label>
+		</div> <!-- End of input label col -->
+		<div class="col-4 col-md-12 col-lg-7"> <!-- Start of input col -->
+		  <input type="text" class="form-control" value="{{ building_values.building_blue }}" id="text-blue-{{ strip_id }}">
+		</div> <!-- End of input row-->
+		<div class="offset-6"></div>
+	      </div> <!-- End of entry row -->
+	      <div class="row"> <!-- Start of entry row -->
+		<div class="col-2 col-md-12 col-lg-5"> <!-- Start of input label col -->
+		  <label>LED Min</label>
+		</div> <!-- End of input label col -->
+		<div class="col-4 col-md-12 col-lg-7"> <!-- Start of input col -->
+		  <input type="text" class="form-control" value="{{ building_values.building_led_min }}" id="text-led-min-{{ strip_id }}">
+		</div> <!-- End of input row-->
+		<div class="offset-6"></div>
+	      </div> <!-- End of entry row -->
+	      <div class="row"> <!-- Start of entry row -->
+		<div class="col-2 col-md-12 col-lg-5"> <!-- Start of input label col -->
+		  <label>LED Max</label>
+		</div> <!-- End of input label col -->
+		<div class="col-4 col-md-12 col-lg-7"> <!-- Start of input col -->
+		  <input type="text" class="form-control" value="{{ building_values.building_led_max }}" id="text-led-max-{{ strip_id }}">
+		</div> <!-- End of input row-->
+		<div class="offset-6"></div>
+	      </div> <!-- End of entry row -->
+	      <div class="row"> <!-- Start of motor row -->
+		<input type="submit" value="Submit">
+	      </div> <!-- End of motor row -->
+	    </form>
+	  {% endfor %}
+	  <br>
+	  <hr>
+	</div> <!-- End of strip col -->
+      {% endfor %}
+    </div>
+  </div>
+  <script>
+    function submitFormStrip(stripId) {
+      $('#form-strip-' + stripId).submit();
+    };
+    function submitFormMotor() {
+      $('#form-motor').submit();
+    };
+    function submitFormTrafficLight() {
+      $('#form-traffic-light').submit();
+    };
+  </script>
+{% endblock %}

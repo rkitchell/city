@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+
+{% load staticfiles %}
+<html>
+  <head>
+    {% block headextra %}
+    {% endblock %}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- link to main stylesheet -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-social/5.1.1/bootstrap-social.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.4/css/bootstrap3/bootstrap-switch.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.2.0/dropzone.css">
+  </head>
+  <body>
+    <div class="container-fluid">
+      {% block content %}
+      {% endblock %}
+    </div> <!-- End of container -->
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-switch/3.3.4/js/bootstrap-switch.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.2.0/dropzone.js"></script>
+    <script>
+      $("[name='motor']").bootstrapSwitch();
+      $("[name='street-light']").bootstrapSwitch();
+      $("[name='traffic-light']").bootstrapSwitch();
+      $("[name='traffic-light-switch']").bootstrapSwitch();
+
+      $(document).ready(function() {
+	// Define Dropzone
+	Dropzone.options.oledDropzone = {
+	  paramName: "file", // The name that will be used to transfer the file
+	  maxFilesize: 2, // MB
+	  acceptedFiles: 'image/*', 
+	  addRemoveLinks: true, 
+	  autoProcessQueue: false,
+	  sending: function(file, xhr, formData){
+	    var doc = document.getElementById("oled-select");
+	    formData.append('oled_id', doc.options[doc.selectedIndex].value);
+	  },
+	  init: function() {
+	    mDropzone = this;
+	    // Listen for removed file
+	    mDropzone.on("removedfile", function(file) {
+	      console.log(file['name']);
+	    });
+
+	    // Allow thumbnail upload
+	    {% for oled_id, oled_values in response.items %}
+	      {% for dir in oled_values.images %}
+		var mockFile = { name: "{{ dir }}", size: 2, type: 'image/*' };
+		mDropzone.emit("addedfile", mockFile);
+		mDropzone.emit("thumbnail", mockFile, '{{ MEDIA_URL }}{{ dir }}');
+		mDropzone.emit("complete", mockFile);
+	      {% endfor %}
+	    {% endfor %}
+	    $('#modal-submit').click(function() {
+	      mDropzone.processQueue();
+	    });
+	    mDropzone.on("addedfile", function (file) {
+	      $('#upload-modal').modal('show'); 
+	      $('#modal-close').click(function() {
+		mDropzone.removeFile(file);
+	      });
+	      /*$('#upload-modal').on('hidden.bs.modal', function () {
+		mDropzone.removeFile(file);
+	      });*/
+	    }); 
+	  },
+	};
+	// Handle change in building params
+	$('.building-form').on('submit', function(e){
+	  e.preventDefault();
+
+	  var stripNum = $(this).attr("data-strip");
+	  var buildingNum = $(this).attr("data-building");
+
+	  axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+	  axios.post('/strip', JSON.stringify({
+	    'data': 'building', 
+	    'building_red': $('#text-red-' + stripNum).val(), 
+	    'building_green': $('#text-green-' + stripNum).val(), 
+	    'building_blue': $('#text-blue-' + stripNum).val(), 
+	    'building_led_max': $('#text-led-max-' + stripNum).val(), 
+	    'building_led_min': $('#text-led-min-' + stripNum).val(), 
+	    'strip_id': stripNum, 
+	    'building_id': buildingNum, 
+	  })).then(function(response) {
+	    console.log(response);
+	  }).catch(function(error) {
+	    console.log(error);
+	  });
+	});
+	// Handle traffic light switch change
+	$('.traffic-light-form').on('submit', function(e) {
+	  e.preventDefault();
+
+	  axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+	  axios.post('/strip', JSON.stringify({
+	    'data': 'traffic_light', 
+	    'traffic_light_mode': $('#traffic-light').bootstrapSwitch('state'),
+	    'traffic_light_power': $('#traffic-light-switch').bootstrapSwitch('state'),
+	  })).then(function(response) {
+	    console.log(response);
+	  }).catch(function(error) {
+	    console.log(error);
+	  });
+	});
+	// Handle motor switch change
+	$('.motor-form').on('submit', function(e) {
+	  e.preventDefault();
+
+	  axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+	  axios.post('/strip', JSON.stringify({
+	    'data': 'motor', 
+	    'motor_on': $('#motor').bootstrapSwitch('state'),
+	  })).then(function(response) {
+	    console.log(response);
+	  }).catch(function(error) {
+	    console.log(error);
+	  });
+	});
+	// Handle street light changes
+	$('.strip-form').on('submit', function(e) {
+	  e.preventDefault();
+
+	  var stripNum = $(this).attr("data-strip");
+
+	  axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+	  axios.post('/strip', JSON.stringify({
+	    'data': 'strip', 
+	    'strip_id': stripNum, 
+	    'street_light_on': $('#street-light-' + stripNum).bootstrapSwitch('state'),
+	  })).then(function(response) {
+	    console.log(response);
+	  }).catch(function(error) {
+	    console.log(error);
+	  });
+	});
+      });
+    </script>
+  </body>
+</html>

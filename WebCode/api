@@ -1,0 +1,11 @@
+import requests
+
+post = requests.post("http://127.0.0.1:8000/api/", data={'data': 'building', 'strip_id': strip_id, 'building_id': building_id, 'param': value})
+
+'data': the element you wish to control. Can be either motor, building, street_light
+
+'strip_id': the strip to which the element is attached. Applies only to street_light and building data elements
+
+'building_id': the building number on the strip. Only applies to building data elements
+
+'param': the parameter ofthe element you wish to control. See 127.0.0.1:8000/api/ for options available that apply to your data elememt

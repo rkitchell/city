@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block headextra %}
+  <title>OLED Control</title>
+{% endblock %}
+
+{% block content %}
+  <div class="row">
+    {{ response }}
+    <div class="col-md-12">
+      <form action="/oled" class="dropzone" id="oled-dropzone">
+	{% csrf_token %}
+	<div class="fallback">
+	  <input name="file" type="file" multiple />
+	</div>
+      </form>
+    </div>
+  </div>
+  <div class="modal fade" id="upload-modal" tabindex="-1" role="dialog" aria-labelledby="upload-modal-title" aria-hidden="true"> <!-- Modal -->
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+	<div class="modal-header">
+	  <h5 class="modal-title" id="upload-modal-title">Modal title</h5>
+	  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	    <span aria-hidden="true">&times;</span>
+	  </button>
+	</div>
+	<div class="modal-body">
+	  <div class="form-group">
+	    <label for="exampleFormControlSelect1">Select OLED</label>
+	    <select class="form-control" id="oled-select">
+	      {% for oled_id, oled_values in response.oleds.items %}
+		<option>{{ oled_id }}</option>
+	      {% endfor %}
+	    </select>
+	  </div>
+	</div>
+	<div class="modal-footer">
+	  <button type="button" class="btn btn-secondary" data-dismiss="modal" id="modal-close">Cancel</button>
+	  <button type="button" class="btn btn-primary" data-dismiss="modal" id="modal-submit">Upload</button>
+	</div>
+      </div>
+    </div>
+  </div> <!-- End of modal -->
+{% endblock %}
